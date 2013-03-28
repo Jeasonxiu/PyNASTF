@@ -61,7 +61,11 @@ def rotater(tr_N, tr_E):
     Rotates horizontal components of a seismogram.
     """
     az, ba = azbackaz(tr_N)
-    return az, rotate_NE_RT(tr_N.data, tr_E.data, ba)[1]
+    try:
+        return az, rotate_NE_RT(tr_N.data, tr_E.data, ba)[1]
+    except Exception, e:
+        print e
+        return False, tr_N.data
 
 #----------------------------- station_selector -----------------------------
 def station_selector(all_ph_data):

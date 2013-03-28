@@ -67,7 +67,7 @@ def PyNASTF(**kwargs):
     inp.network = inp.network.split(',')
     for _i in xrange(len(inp.network)):
         inp.network[_i] = inp.network[_i].strip()
-
+    
     inp.channel = inp.channel.split(',')
     for _i in xrange(len(inp.channel)):
         inp.channel[_i] = inp.channel[_i].strip()
@@ -91,7 +91,8 @@ def PyNASTF(**kwargs):
         all_sta_add = glob.glob(os.path.join(e_add, '*.*.*.*'))
         for sta_add in all_sta_add:
             tr = read(sta_add)[0]
-            if not tr.stats.network in inp.network: continue
+            if not inp.network == ['*']:
+                if not tr.stats.network in inp.network: continue
             if not tr.stats.channel in inp.channel: continue
             epi_dist = locations2degrees(tr.stats.sac.evla, tr.stats.sac.evlo,
                         tr.stats.sac.stla, tr.stats.sac.stlo)
@@ -115,12 +116,15 @@ def PyNASTF(**kwargs):
                 except Exception, e:
                     print 'Cannot read: \n%s' %(sta_add[:-1] + 'E')
                     continue
+                
+                tr.resample(inp.sampling_rate)
+                tr_E.resample(inp.sampling_rate)
                 tr_sh = tr.copy() 
-                az, tr_sh.data = rotater(tr, tr_E) 
+                az, tr_sh.data = rotater(tr, tr_E)
+                if not az: continue 
                 tr_tw = time_window(tr_sh, model=inp.bg_model)
                 ph_arr = tr_tw.arr_time(epi_dist, req_phase='S')
                 if ph_arr == -12345.0: continue
-                tr.resample(inp.sampling_rate)
                 SNR, l1_noise, l2_noise, sh_data = SNR_calculator(tr_sh, events[0]['datetime'], 
                         ph_arr, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30, method='squared')
                 if SNR < inp.SNR_limit: continue
