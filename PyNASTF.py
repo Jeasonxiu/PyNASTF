@@ -79,9 +79,7 @@ def PyNASTF(**kwargs):
         events, e_add_par = \
             quake_info(address=os.path.join(e_add, os.path.pardir),
                 target = 'info')
-        print '------------------'
-        print '%s/%s' %(ev_enum+1, len(targ_add))
-        print 'address: %s' %(e_add)
+        print '\nEvent %s/%s: %s' %(ev_enum+1, len(targ_add), e_add)
         metadata = []
         msg_header = 'Event information; Lat, Lon, Depth\n'
         msg_header += '%.6f %.6f %.6f\n' %(events[0]['latitude'],

@@ -1,6 +1,7 @@
 import fnmatch
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import numpy as np
 from obspy.core.util import gps2DistAzimuth
 from obspy.signal.rotate import rotate_NE_RT
 from obspy.taup.taup import getTravelTimes
@@ -129,4 +130,4 @@ def mapper(all_p_data, all_sh_data, address):
         m.scatter(x, y, color="red", marker="o",
                     edgecolor="black", zorder=10)
             
-    plt.savefig(os.path.join(address, 'plot.png')))
+    plt.savefig(os.path.join(address, 'map.png'))
