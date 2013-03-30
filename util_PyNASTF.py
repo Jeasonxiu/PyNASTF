@@ -7,15 +7,6 @@ from obspy.signal.rotate import rotate_NE_RT
 from obspy.taup.taup import getTravelTimes
 import os
 
-try:
-    from obspy.core.util import locations2degrees
-except Exception, error:
-    print '---------'
-    print error
-    print '---------'
-    from obspy.taup.taup import locations2degrees
-
-
 #----------------------------- locate -----------------------------
 def locate(root = '.', target = 'BH'):
     """
@@ -47,6 +38,21 @@ class time_window:
                 break
         return (t_phase)
 
+#----------------------------- preproc -----------------------------
+def preproc(tr, filter=True, hfreq=1., lfreq=1./30, 
+                  resample=True, sampling_rate=10):
+    """
+    preprocessing on the traces. Currently:
+    - Filter
+    - Resample
+    """
+    if filter:
+        tr.filter('highpass', freq=lfreq)
+        tr.filter('lowpass', freq=hfreq)
+    if resample:
+        tr.resample(sampling_rate)
+    return tr
+
 #----------------------------- azbackaz -----------------------------
 def azbackaz(tr):
     """
@@ -64,7 +70,9 @@ def rotater(tr_N, tr_E):
     try:
         return az, rotate_NE_RT(tr_N.data, tr_E.data, ba)[1]
     except Exception, e:
-        print e
+        print 'ERROR %s.%s.%s.%s: %s vs %s %s' %(tr_N.stats.network, 
+                tr_N.stats.station, tr_N.stats.location, 
+                tr_N.stats.channel, tr_N.stats.npts, tr_E.stats.npts, e)
         return False, tr_N.data
 
 #----------------------------- station_selector -----------------------------
