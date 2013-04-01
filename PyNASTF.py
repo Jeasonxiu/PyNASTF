@@ -66,6 +66,7 @@ def PyNASTF(**kwargs):
             self.SNR_limit = eval(config.get('General', 'SNR_limit'))
             self.plot_ph_no = eval(config.get('General', 'plot_phase_noise'))
             self.map = eval(config.get('General', 'map'))
+            self.plot_azi = eval(config.get('General', 'plot_azi'))
 
     # create the input class
     inp = input_handler(inputpath)
@@ -78,6 +79,11 @@ def PyNASTF(**kwargs):
     inp.channel = inp.channel.split(',')
     for _i in xrange(len(inp.channel)):
         inp.channel[_i] = inp.channel[_i].strip()
+    
+    # s_tb: Signal time before, s_ta: Signal time after
+    # n_tb: Noise Time before, n_ta: Noise time after
+    s_tb=-3; s_ta=9
+    n_tb=-150; n_ta=-30
 
     targ_add = locate(root=inp.event_address, target='BH')
 
@@ -89,17 +95,17 @@ def PyNASTF(**kwargs):
         print '\n==========='
         print 'Event %s/%s: \n%s' %(ev_enum+1, len(targ_add), e_add)
         print '==========='
-        if not os.path.isdir(os.path.join('NASTF-INPUT', e_add.split('/')[-2])): 
-            os.makedirs(os.path.join('NASTF-INPUT', e_add.split('/')[-2])) 
+        if not os.path.isdir(os.path.join(e_add.split('/')[-2], 'infiles')): 
+            os.makedirs(os.path.join(e_add.split('/')[-2], 'infiles')) 
         metadata = []
         msg_header = 'Event information; Lat, Lon, Depth\n'
         msg_header += '%.6f %.6f %.6f\n' %(events[0]['latitude'],
                                   events[0]['longitude'], events[0]['depth'])
         msg_p = 'P-wave data ' + 17*'*' + '\n'
         msg_sh = 'SH-wave data ' + 17*'*' + '\n'
-        p_traces = []; sh_traces = []
         all_p_data = []; all_sh_data = []
         all_sta_add = glob.glob(os.path.join(e_add, '*.*.*.*'))
+        all_sta_add.sort()
         for sta_add in all_sta_add:
             tr = read(sta_add)[0]
             if not inp.network == ['*']:
@@ -123,16 +129,17 @@ def PyNASTF(**kwargs):
                             resample=inp.resample, sampling_rate=inp.sampling_rate)
                 SNR, l1_noise, l2_noise, p_data, flag_exist = \
                         SNR_calculator(tr, events[0]['datetime'], 
-                        ph_arr, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30, method='squared',
+                        ph_arr, s_tb=s_tb, s_ta=s_ta, n_tb=n_tb, n_ta=n_ta, method='squared',
                         plot_ph_no=inp.plot_ph_no,
-                        address=os.path.join('NASTF-INPUT', e_add.split('/')[-2]))
+                        address=os.path.join(e_add.split('/')[-2], 'infiles'))
                 if not flag_exist: continue
                 if SNR < inp.SNR_limit: continue
-                p_traces.append('%s\n%.6f %.6f %.6f\n%.6f %.6f %.6f\n' %(tr.stats.station,
-                            tr.stats.sac.stla, tr.stats.sac.stlo, ph_arr, 
-                            SNR, l1_noise, l2_noise))
+                innastats_str = '%s\n%.6f %.6f %.6f\n%.6f %.6f %.6f\n' %(tr.stats.station,
+                            tr.stats.sac.stla, tr.stats.sac.stlo, ph_arr+s_tb, 
+                            SNR, l1_noise, l2_noise)
                 az, ba = azbackaz(tr)
-                all_p_data.append([tr.stats.station, tr.stats.location, SNR, az, p_data]) 
+                all_p_data.append([tr.stats.station, tr.stats.location, SNR, az, 
+                                        p_data, innastats_str]) 
             if 'N' in tr.stats.channel:
                 try:
                     tr_E = read(sta_add[:-1] + 'E')[0]
@@ -151,41 +158,47 @@ def PyNASTF(**kwargs):
                 if ph_arr == -12345.0: continue
                 SNR, l1_noise, l2_noise, sh_data, flag_exist = \
                         SNR_calculator(tr_sh, events[0]['datetime'], 
-                        ph_arr, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30, method='squared',
+                        ph_arr, s_tb=s_tb, s_ta=s_ta, n_tb=n_tb, n_ta=n_ta, method='squared',
                         plot_ph_no=inp.plot_ph_no,
-                        address=os.path.join('NASTF-INPUT', e_add.split('/')[-2]))
+                        address=os.path.join(e_add.split('/')[-2], 'infiles'))
                 if not flag_exist: continue
                 if SNR < inp.SNR_limit: continue
-                sh_traces.append('%s\n%.6f %.6f %.6f\n%.6f %.6f %.6f\n' %(tr_sh.stats.station,
-                            tr_sh.stats.sac.stla, tr_sh.stats.sac.stlo, ph_arr, 
-                            SNR, l1_noise, l2_noise))
-                all_sh_data.append([tr_sh.stats.station, tr_sh.stats.location, SNR, az, sh_data])
+                innastats_str = '%s\n%.6f %.6f %.6f\n%.6f %.6f %.6f\n' %(tr_sh.stats.station,
+                            tr_sh.stats.sac.stla, tr_sh.stats.sac.stlo, ph_arr+s_tb, 
+                            SNR, l1_noise, l2_noise)
+                all_sh_data.append([tr_sh.stats.station, tr_sh.stats.location, SNR, az, 
+                                            sh_data, innastats_str])
         
         
         all_p_data = station_selector(all_p_data)
         all_sh_data = station_selector(all_sh_data)
-              
+        
+        # sort the stations by azimuth
+        all_p_data.sort(key=lambda x: x[3])
+        all_sh_data.sort(key=lambda x: x[3])
+
         msg = msg_header
         print '\n**********************'
         print 'info:'
-        print '%s  P-traces\n%s  SH-traces' %(len(p_traces), len(sh_traces))
+        print '%s  P-traces\n%s  SH-traces' %(len(all_p_data), len(all_sh_data))
         print '**********************'
-        msg += '%s  P-traces\n%s  SH-traces\n' %(len(p_traces), len(sh_traces))
+        msg += '%s  P-traces\n%s  SH-traces\n' %(len(all_p_data), len(all_sh_data))
         msg += msg_p 
-        for item in p_traces: msg += item
+        for _i in xrange(len(all_p_data)): msg += all_p_data[_i][-1]
         msg += msg_sh 
-        for item in sh_traces: msg += item
-        innastats_open = open(os.path.join('NASTF-INPUT', 
-                                 e_add.split('/')[-2], 'in.na.stats'), 'w')
+        for _i in xrange(len(all_sh_data)): msg += all_sh_data[_i][-1]
+        innastats_open = open(os.path.join(e_add.split('/')[-2], 
+                                                'infiles', 'in.na.stats'), 'w')
         innastats_open.write(msg)
         innastats_open.close()
        
-        ncdump(os.path.join('NASTF-INPUT', e_add.split('/')[-2]), 
+        ncdump(os.path.join(e_add.split('/')[-2], 'infiles'), 
                             all_p_data, all_sh_data)
         
         if inp.map: mapper(all_p_data, all_sh_data, 
-                            address=os.path.join('NASTF-INPUT', e_add.split('/')[-2])) 
-        
+                            address=os.path.join(e_add.split('/')[-2], 'infiles')) 
+        if inp.plot_azi: plot_azi(all_p_data, all_sh_data, 
+                            address=os.path.join(e_add.split('/')[-2], 'infiles')) 
 ########################################################################
 ########################################################################
 ########################################################################

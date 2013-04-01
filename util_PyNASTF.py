@@ -117,29 +117,81 @@ def mapper(all_p_data, all_sh_data, address):
     it uses the cylinderial projection
     """
     plt.clf() 
-    m = Basemap(projection='cyl', 
-                  lon_0=all_p_data[0][-1].stats.sac.evlo, 
+    m = Basemap(projection='ortho', 
+                  lon_0=all_p_data[0][-2].stats.sac.evlo, 
+                  lat_0=all_p_data[0][-2].stats.sac.evla, 
                   resolution='c')
     m.drawcoastlines()
     m.fillcontinents()
     m.drawparallels(np.arange(-90.,120.,30.))
     m.drawmeridians(np.arange(0.,420.,60.))
     m.drawmapboundary()
-    x_ev, y_ev = m(all_p_data[0][-1].stats.sac.evlo, 
-                    all_p_data[0][-1].stats.sac.evla)
+    x_ev, y_ev = m(all_p_data[0][-2].stats.sac.evlo, 
+                    all_p_data[0][-2].stats.sac.evla)
     m.scatter(x_ev, y_ev, color="red", marker="*",
                 edgecolor="red", zorder=10)
     
     for _i in xrange(len(all_p_data)):
-        x, y = m(all_p_data[_i][-1].stats.sac.stlo, 
-                        all_p_data[_i][-1].stats.sac.stla)
+        x, y = m(all_p_data[_i][-2].stats.sac.stlo, 
+                        all_p_data[_i][-2].stats.sac.stla)
         m.scatter(x, y, color="blue", marker="o",
                     edgecolor="black", zorder=10)
  
     for _i in xrange(len(all_sh_data)):
-        x, y = m(all_sh_data[_i][-1].stats.sac.stlo, 
-                        all_sh_data[_i][-1].stats.sac.stla)
+        x, y = m(all_sh_data[_i][-2].stats.sac.stlo, 
+                        all_sh_data[_i][-2].stats.sac.stla)
         m.scatter(x, y, color="red", marker="o",
                     edgecolor="black", zorder=10)
             
-    plt.savefig(os.path.join(address, 'map.png'))
+    plt.savefig(os.path.join(address, 'na.map.png'))
+
+#----------------------------- plot_azi -----------------------------
+def plot_azi(all_p_data, all_sh_data, address):
+    """
+    create two plots (P and SH) for all selected waveforms sorted by azimuth
+    """
+    plt.clf()
+    fig = plt.figure()
+    for _i in xrange(len(all_p_data)):
+        dt=all_p_data[_i][-2].stats.delta
+        npts=all_p_data[_i][-2].stats.npts
+        #t = np.linspace(0., dt*(npts-1), npts)
+        t = np.linspace(0., 1, npts)
+        np_cols = int(np.sqrt(len(all_p_data)))
+        np_rows = len(all_p_data)/np_cols+1
+        sub_plt = fig.add_subplot(np_rows, np_cols, _i+1)
+        sub_plt.spines['right'].set_color('none')
+        sub_plt.spines['top'].set_color('none')
+        sub_plt.spines['left'].set_color('none')
+        sub_plt.spines['bottom'].set_color('none')
+        sub_plt.xaxis.set_visible(False)
+        sub_plt.yaxis.set_visible(False)
+        sub_plt.plot(t, all_p_data[_i][-2].data/abs(all_p_data[_i][-2].max())*10, 'black')
+        plt.xticks([])
+        plt.yticks([])
+        #plt.title('%s\n%s' %(all_p_data[_i][0], all_p_data[_i][3]))
+    plt.tight_layout()
+    plt.savefig(os.path.join(address, 'na.P.png'))
+
+    plt.clf()
+    fig = plt.figure()
+    for _i in xrange(len(all_sh_data)):
+        dt=all_sh_data[_i][-2].stats.delta
+        npts=all_sh_data[_i][-2].stats.npts
+        #t = np.linspace(0., dt*(npts-1), npts)
+        t = np.linspace(0., 1, npts)
+        np_cols = int(np.sqrt(len(all_sh_data)))
+        np_rows = len(all_sh_data)/np_cols+1
+        sub_plt = fig.add_subplot(np_rows, np_cols, _i+1)
+        sub_plt.spines['right'].set_color('none')
+        sub_plt.spines['top'].set_color('none')
+        sub_plt.spines['left'].set_color('none')
+        sub_plt.spines['bottom'].set_color('none')
+        sub_plt.xaxis.set_visible(False)
+        sub_plt.yaxis.set_visible(False)
+        sub_plt.plot(t, all_sh_data[_i][-2].data/abs(all_sh_data[_i][-2].max())*10, 'black')
+        plt.xticks([])
+        plt.yticks([])
+        #plt.title('%s\n%s' %(all_sh_data[_i][0], all_sh_data[_i][3]))
+    plt.tight_layout()
+    plt.savefig(os.path.join(address, 'na.SH.png'))

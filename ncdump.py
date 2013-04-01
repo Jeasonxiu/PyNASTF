@@ -16,9 +16,9 @@ def ncdump(address, all_p_data, all_sh_data, format = 'NETCDF4'):
     rootgrp.createVariable('data_P', 'f8', ('stat_P','samples'))
     rootgrp.createVariable('data_SH', 'f8', ('stat_SH','samples'))
     for i in xrange(len(all_p_data)):
-        rootgrp.variables['data_P'][i, 0:len(all_p_data[i][-1].data)] = \
-                                                all_p_data[i][-1].data
+        rootgrp.variables['data_P'][i, 0:len(all_p_data[i][-2].data)] = \
+                                                all_p_data[i][-2].data
     for i in xrange(len(all_sh_data)):
-        rootgrp.variables['data_SH'][i, 0:len(all_sh_data[i][-1].data)] = \
-                                                all_sh_data[i][-1].data
+        rootgrp.variables['data_SH'][i, 0:len(all_sh_data[i][-2].data)] = \
+                                                all_sh_data[i][-2].data
     rootgrp.close()

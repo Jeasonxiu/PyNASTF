@@ -11,8 +11,12 @@ def SNR_calculator(tr, t_orig, t_phase, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30,
     """
     if method == 'squared':
         try:
-            tr_id = '%s.%s.%s.%s' %(tr.stats.network, tr.stats.station, 
+            if 'Z' in tr.stats.channel:
+                tr_id = '%s.%s.%s.%s' %(tr.stats.network, tr.stats.station, 
                                      tr.stats.location, tr.stats.channel) 
+            else:
+                tr_id = '%s.%s.%s.%s' %(tr.stats.network, tr.stats.station, 
+                                     tr.stats.location, 'BHT') 
             phase_signal = tr.slice(t_orig+t_phase+s_tb, t_orig+t_phase+s_ta)
             phase_noise = tr.slice(t_orig+t_phase+n_tb, t_orig+t_phase+n_ta)
             if plot_ph_no:
