@@ -39,13 +39,13 @@ def SNR_calculator(tr, t_orig, t_phase, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30,
                 if not os.path.isdir(os.path.join(address, 'FIGS')): 
                     os.makedirs(os.path.join(address, 'FIGS')) 
                 plt.savefig(os.path.join(address, 'FIGS', tr_id + '.png'))
-            # XXX Correct one: (temporarily commented!)
-            #SNR = np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise))*\
-            #            (float(phase_noise.stats.npts)/phase_signal.stats.npts)
+            SNR = np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise))*\
+                        (float(phase_noise.stats.npts)/phase_signal.stats.npts)
             # XXX Simon's definition:
-            SNR = np.sqrt((np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise)))/
-                        np.square(float(phase_noise.stats.npts)/phase_signal.stats.npts))
-            print SNR
+            #SNR = np.sqrt((np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise)))/
+            #            np.square(float(phase_noise.stats.npts)/phase_signal.stats.npts))
+            #SNR = np.sqrt((np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise)))/
+            #            np.square(12))
             l1_noise = np.sum(np.abs(phase_noise.data))/(phase_noise.stats.npts)
             l2_noise = np.sqrt(np.sum(np.square(phase_noise.data)))/(phase_noise.stats.npts)
             if m.isnan(SNR) or m.isnan(l1_noise) or m.isnan(l2_noise):
