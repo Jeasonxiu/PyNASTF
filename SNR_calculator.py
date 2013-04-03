@@ -19,6 +19,9 @@ def SNR_calculator(tr, t_orig, t_phase, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30,
                                      tr.stats.location, 'BHT') 
             phase_signal = tr.slice(t_orig+t_phase+s_tb, t_orig+t_phase+s_ta)
             phase_noise = tr.slice(t_orig+t_phase+n_tb, t_orig+t_phase+n_ta)
+            #XXX it is completely hard coded! it is fixed for 51.2 secs...
+            #XXX it can be much nicer but for now we just leave it!
+            phase_data = tr.slice(t_orig+t_phase-5, t_orig+t_phase+46.2)
             if plot_ph_no:
                 plt.clf()
                 dt=tr.stats.delta; npts=tr.stats.npts
@@ -36,13 +39,18 @@ def SNR_calculator(tr, t_orig, t_phase, s_tb=-3, s_ta=9, n_tb=-150, n_ta=-30,
                 if not os.path.isdir(os.path.join(address, 'FIGS')): 
                     os.makedirs(os.path.join(address, 'FIGS')) 
                 plt.savefig(os.path.join(address, 'FIGS', tr_id + '.png'))
-            SNR = np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise))*\
-                        (float(phase_noise.stats.npts)/phase_signal.stats.npts)
+            # XXX Correct one: (temporarily commented!)
+            #SNR = np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise))*\
+            #            (float(phase_noise.stats.npts)/phase_signal.stats.npts)
+            # XXX Simon's definition:
+            SNR = np.sqrt((np.sum(np.square(phase_signal))/np.sum(np.square(phase_noise)))/
+                        np.square(float(phase_noise.stats.npts)/phase_signal.stats.npts))
+            print SNR
             l1_noise = np.sum(np.abs(phase_noise.data))/(phase_noise.stats.npts)
             l2_noise = np.sqrt(np.sum(np.square(phase_noise.data)))/(phase_noise.stats.npts)
             if m.isnan(SNR) or m.isnan(l1_noise) or m.isnan(l2_noise):
                 raise ValueError('nan')
-            return SNR, l1_noise, l2_noise, phase_signal, True
+            return SNR, l1_noise, l2_noise, phase_data, True
         except Exception, e:
             print 'ERROR %s: %s' %(tr_id, e)
             return False, False, False, False, False

@@ -47,8 +47,13 @@ def preproc(tr, filter=True, hfreq=1., lfreq=1./30,
     - Resample
     """
     if filter:
-        tr.filter('highpass', freq=lfreq)
-        tr.filter('lowpass', freq=hfreq)
+        # Applying low-pass and high-pass filters
+        #tr.filter('highpass', freq=lfreq)
+        #tr.filter('lowpass', freq=hfreq)
+        
+        # XXX maybe better to use SAC instead?!
+        tr.filter('bandpass', freqmin=lfreq, freqmax=hfreq, 
+                                corners=2, zerophase=True)
     if resample:
         tr.resample(sampling_rate)
     return tr

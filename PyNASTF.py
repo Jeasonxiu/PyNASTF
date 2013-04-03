@@ -116,13 +116,13 @@ def PyNASTF(**kwargs):
             epi_km = gps2DistAzimuth(tr.stats.sac.evla, tr.stats.sac.evlo,
                         tr.stats.sac.stla, tr.stats.sac.stlo)[0]
             epi_dist = kilometer2degrees(epi_km/1000.)
-            # XXXXX for testing!
+            # XXX for testing!
             epi_dist = tr.stats.sac.gcarc
             if not inp.min_dist<=epi_dist<=inp.max_dist: continue
             if 'Z' in tr.stats.channel:
                 tr_tw = time_window(tr, model=inp.bg_model)
                 ph_arr = tr_tw.arr_time(epi_dist, req_phase='P')
-                # XXXXX for testing
+                # XXX for testing
                 ph_arr = tr.stats.sac.t0
                 if ph_arr == -12345.0: continue
                 tr = preproc(tr, filter=inp.filter, hfreq=inp.hfreq, lfreq=inp.lfreq, 
