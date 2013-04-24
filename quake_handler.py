@@ -3,6 +3,30 @@ import glob
 import fnmatch
 from obspy import read, UTCDateTime
 
+#--------------------------- pdata_reader -------------------------
+def pdata_reader(address, remote_address):
+    """
+    Reads pdata_events.txt and extract the event info
+    """
+    pdata_fio = open(address)
+    pdata_fi = pdata_fio.readlines()[1:]
+    ev_name = []; ev_lat = []; ev_lon = []
+    ev_dp = []; ev_date = []
+    for i in range(len(pdata_fi)):
+        pdata_fi[i] = pdata_fi[i].split('\n')[0].split(',')
+        ev_name.append(os.path.join(remote_address, pdata_fi[i][0]))
+        ev_lat.append(float(pdata_fi[i][1]))
+        ev_lon.append(float(pdata_fi[i][2]))
+        ev_dp.append(float(pdata_fi[i][3]))
+        if not len(pdata_fi[i][12]) == 3:
+            pdata_fi[i][12] = (3-len(pdata_fi[i][12]))*'0' + pdata_fi[i][12] 
+        str_time = '%s-%sT%s:%s:%s.%s' %(pdata_fi[i][11], pdata_fi[i][12], 
+                    pdata_fi[i][13], pdata_fi[i][14], pdata_fi[i][15], 
+                    pdata_fi[i][16])
+        ev_date.append(UTCDateTime(str_time))
+    return ev_name, ev_lat, ev_lon, ev_dp, ev_date
+    
+
 #--------------------------- quake_info -------------------------
 def quake_info(address, target):
     """

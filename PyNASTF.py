@@ -30,7 +30,7 @@ import sys
 import time
 
 from SNR_calculator import SNR_calculator
-from quake_handler import quake_info
+from quake_handler import quake_info,pdata_reader
 from util_PyNASTF import * 
 
 
@@ -51,6 +51,7 @@ def PyNASTF(**kwargs):
             self.inpath = inputpath
             self.config = config.read(os.path.join(os.getcwd(), self.inpath))
             self.event_address = config.get('General', 'event_address')
+            self.remote_address = config.get('General', 'remote_address')
             self.network = config.get('General', 'network')
             self.station = config.get('General', 'station')
             self.location = config.get('General', 'location')
@@ -84,30 +85,34 @@ def PyNASTF(**kwargs):
     # n_tb: Noise Time before, n_ta: Noise time after
     s_tb=-3; s_ta=9
     n_tb=-150; n_ta=-30
-
-    targ_add = locate(root=inp.event_address, target='BH')
-
-    for ev_enum in xrange(len(targ_add)):
-        e_add = targ_add[ev_enum]
-        events, e_add_par = \
-            quake_info(address=os.path.join(e_add, os.path.pardir),
-                target = 'info')
+    
+    ev_name, ev_lat, ev_lon, ev_dp, ev_date = \
+            pdata_reader(address = inp.event_address, remote_address=inp.remote_address)
+    for _i in range(len(ev_name)):
+        ev_name[_i] = os.path.join(ev_name[_i], 'BH')
+    for ev_enum in xrange(len(ev_name)):
+        e_add = ev_name[ev_enum]
         print '\n==========='
-        print 'Event %s/%s: \n%s' %(ev_enum+1, len(targ_add), e_add)
+        print 'Event %s/%s: \n%s' %(ev_enum+1, len(ev_name), e_add)
         print '==========='
         if not os.path.isdir(os.path.join(e_add.split('/')[-2], 'infiles')): 
             os.makedirs(os.path.join(e_add.split('/')[-2], 'infiles')) 
         metadata = []
         msg_header = 'Event information; Lat, Lon, Depth\n'
-        msg_header += '%.6f %.6f %.6f\n' %(events[0]['latitude'],
-                                  events[0]['longitude'], events[0]['depth'])
+        msg_header += '%.6f %.6f %.6f\n' %(ev_lat[ev_enum],ev_lon[ev_enum], ev_dp[ev_enum])
         msg_p = 'P-wave data ' + 17*'*' + '\n'
         msg_sh = 'SH-wave data ' + 17*'*' + '\n'
         all_p_data = []; all_sh_data = []
         all_sta_add = glob.glob(os.path.join(e_add, '*.*.*.*'))
         all_sta_add.sort()
+        print len(all_sta_add)
         for sta_add in all_sta_add:
-            tr = read(sta_add)[0]
+            print .,
+            try:
+                tr = read(sta_add)[0]
+            except Exception, e:
+                print e
+                continue
             if not inp.network == ['*']:
                 if not tr.stats.network in inp.network: continue
             if not tr.stats.channel in inp.channel: continue
@@ -117,18 +122,18 @@ def PyNASTF(**kwargs):
                         tr.stats.sac.stla, tr.stats.sac.stlo)[0]
             epi_dist = kilometer2degrees(epi_km/1000.)
             # XXX for testing!
-            epi_dist = tr.stats.sac.gcarc
+            #epi_dist = tr.stats.sac.gcarc
             if not inp.min_dist<=epi_dist<=inp.max_dist: continue
             if 'Z' in tr.stats.channel:
                 tr_tw = time_window(tr, model=inp.bg_model)
                 ph_arr = tr_tw.arr_time(epi_dist, req_phase='P')
                 # XXX for testing
-                ph_arr = tr.stats.sac.t0
+                #ph_arr = tr.stats.sac.t0
                 if ph_arr == -12345.0: continue
                 tr = preproc(tr, filter=inp.filter, hfreq=inp.hfreq, lfreq=inp.lfreq, 
                             resample=inp.resample, sampling_rate=inp.sampling_rate)
                 SNR, l1_noise, l2_noise, p_data, flag_exist = \
-                        SNR_calculator(tr, events[0]['datetime'], 
+                        SNR_calculator(tr, ev_date[ev_enum], 
                         ph_arr, s_tb=s_tb, s_ta=s_ta, n_tb=n_tb, n_ta=n_ta, method='squared',
                         plot_ph_no=inp.plot_ph_no,
                         address=os.path.join(e_add.split('/')[-2], 'infiles'))
@@ -157,7 +162,7 @@ def PyNASTF(**kwargs):
                 ph_arr = tr_tw.arr_time(epi_dist, req_phase='S')
                 if ph_arr == -12345.0: continue
                 SNR, l1_noise, l2_noise, sh_data, flag_exist = \
-                        SNR_calculator(tr_sh, events[0]['datetime'], 
+                        SNR_calculator(tr_sh, ev_date[ev_enum], 
                         ph_arr, s_tb=s_tb, s_ta=s_ta, n_tb=n_tb, n_ta=n_ta, method='squared',
                         plot_ph_no=inp.plot_ph_no,
                         address=os.path.join(e_add.split('/')[-2], 'infiles'))
@@ -228,4 +233,10 @@ if __name__ == "__main__":
 #              lat_0=all_p_data[0][-1].stats.sac.evla,
 #              resolution='c')
 
-
+#targ_add = locate(root=inp.event_address, target='BH')
+ 
+# XXX the next three lines should be activated for obspyDMT
+# for pdata_processed or for psdata this should not work!
+#events, e_add_par = \
+#    quake_info(address=os.path.join(e_add, os.path.pardir),
+#        target = 'info')
