@@ -107,7 +107,7 @@ def PyNASTF(**kwargs):
         all_sta_add.sort()
         print len(all_sta_add)
         for sta_add in all_sta_add:
-            print .,
+            print '.',
             try:
                 tr = read(sta_add)[0]
             except Exception, e:
@@ -200,10 +200,11 @@ def PyNASTF(**kwargs):
         ncdump(os.path.join(e_add.split('/')[-2], 'infiles'), 
                             all_p_data, all_sh_data)
         
-        if inp.map: mapper(all_p_data, all_sh_data, 
-                            address=os.path.join(e_add.split('/')[-2], 'infiles')) 
-        if inp.plot_azi: plot_azi(all_p_data, all_sh_data, 
-                            address=os.path.join(e_add.split('/')[-2], 'infiles')) 
+        if len(all_p_data) != 0 and len(all_sh_data) != 0: 
+            if inp.map: mapper(all_p_data, all_sh_data, 
+                                address=os.path.join(e_add.split('/')[-2], 'infiles')) 
+            if inp.plot_azi: plot_azi(all_p_data, all_sh_data, 
+                                address=os.path.join(e_add.split('/')[-2], 'infiles')) 
 ########################################################################
 ########################################################################
 ########################################################################
