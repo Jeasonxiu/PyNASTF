@@ -205,12 +205,12 @@ def PyNASTF(**kwargs):
                                 address=os.path.join(e_add.split('/')[-2], 'infiles')) 
             if inp.plot_azi: plot_azi(all_p_data, all_sh_data, 
                                 address=os.path.join(e_add.split('/')[-2], 'infiles')) 
+
 ########################################################################
 ########################################################################
 ########################################################################
 
 def main():
-    
     t1_pro = time.time()
     status = PyNASTF()
     print "\n============================="

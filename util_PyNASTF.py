@@ -25,7 +25,7 @@ class time_window:
     - arrival time for the requested phase
     """
     def __init__(self, tr, model='iasp91'):
-        self.id='%s.%s.%s.%s' %(tr.stats.network, tr.stats.station,\
+        self.id='%s.%s.%s.%s' %(tr.stats.network, tr.stats.station,
                                     tr.stats.location, tr.stats.channel)
         self.stats=tr.stats
         self.model=model
@@ -108,7 +108,7 @@ def station_selector(all_ph_data):
         if azi_grp:
             if len(azi_grp) > 3:
                 azi_grp.sort(key=lambda x: x[2])
-                for _i in range(-2, 0):
+                for _i in range(-3, 0):
                     azi_ph_all.append(azi_grp[_i])
             else:
                 for _i in range(0, len(azi_grp)):
@@ -119,7 +119,7 @@ def station_selector(all_ph_data):
 def mapper(all_p_data, all_sh_data, address):
     """
     create a map out of all the stations and the event
-    it uses the cylinderial projection
+    it uses the ortho projection
     """
     plt.clf() 
     m = Basemap(projection='ortho', 

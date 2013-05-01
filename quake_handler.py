@@ -1,7 +1,7 @@
-import os
-import glob
 import fnmatch
+import glob
 from obspy import read, UTCDateTime
+import os
 
 #--------------------------- pdata_reader -------------------------
 def pdata_reader(address, remote_address):

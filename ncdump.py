@@ -15,6 +15,7 @@ def ncdump(address, all_p_data, all_sh_data, format = 'NETCDF4'):
     rootgrp.createDimension('stat_SH', len(all_sh_data))
     rootgrp.createVariable('data_P', 'f8', ('stat_P','samples'))
     rootgrp.createVariable('data_SH', 'f8', ('stat_SH','samples'))
+    # XXX why is it data[:-1] again?
     for i in xrange(len(all_p_data)):
         rootgrp.variables['data_P'][i, 0:len(all_p_data[i][-2].data[:-1])] = \
                                                 all_p_data[i][-2].data[:-1]
